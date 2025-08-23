@@ -1,0 +1,513 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Three-Bucket Portfolio — Advanced Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --card: #ffffff;
+      --ink: #0f172a;
+      --muted: #475569;
+      --subtle: #cbd5e1;
+      --brand: #3b82f6;
+      --brand-ink: #0b5ed7;
+      --accent: #eef2ff;
+      --ring: rgba(59,130,246,0.25);
+      --shadow: 0 8px 30px rgba(2,8,23,0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin:0; padding:0; background:var(--bg); color:var(--ink); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px 16px 28px; }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; margin: 16px 0; }
+    h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.2px; margin: 0 0 10px; }
+    h2 { font-size: 18px; font-weight: 700; margin: 6px 0 14px; }
+    h3 { font-size: 13px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.8px; margin: 16px 0 8px; }
+    p.lead { color: var(--muted); line-height: 1.5; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .row { grid-template-columns: 1fr; } }
+    .small { color: var(--muted); font-size: 12px; }
+    .metric { font-weight: 700; }
+    .slider-wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; background: #fafbff; border: 1px solid var(--subtle); border-radius: 12px; margin-bottom: 8px; }
+    .slider-wrap label { font-weight: 600; font-size: 14px; }
+    input[type=range] { width: 100%; accent-color: var(--brand); }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; background: var(--accent); color: var(--brand-ink); font-size: 12px; font-weight: 700; }
+    table.metrics { width:100%; border-collapse: collapse; }
+    table.metrics td { padding: 8px 10px; border-bottom: 1px solid #eef2f7; }
+    table.metrics tr:first-child td { border-top: 1px solid #eef2f7; }
+    .switch { display:flex; align-items:center; gap:8px; margin: 8px 0 10px; }
+    .desc { grid-column: 1 / -1; margin-top: 6px; color:#5b667a; font-size:12px; }
+    .actions { display:flex; gap:12px; justify-content:flex-end; align-items:center; margin-top:10px; }
+    button { background: var(--brand); color:#fff; border:0; border-radius:10px; padding:11px 16px; font-weight:800; letter-spacing:0.2px; box-shadow: 0 6px 16px var(--ring); }
+    button:disabled { opacity:0.6; box-shadow:none; }
+    .tabs { display:flex; gap:8px; border-bottom:1px solid #e7ecf4; margin-bottom:12px; }
+    .tab { padding:10px 14px; border-radius:10px 10px 0 0; background:#e9f2ff; color:#0b5ed7; cursor:pointer; font-weight:700; }
+    .tab.active { background:#fff; color:var(--ink); border:1px solid #e7ecf4; border-bottom:0; }
+    .badge { display:inline-flex; align-items:center; gap:8px; background:#111827; color:#fff; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:800; }
+    .badge b { color:#fff; }
+    .group { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 10px 0 14px; background: #fff; }
+    .group h3 { margin-top: 0; }
+    .footer { text-align:center; color:#94a3b8; font-size:12px; margin: 24px 0 8px 0; }
+  
+    .corner-badge { position: fixed; top: 12px; right: 12px; z-index: 9999;
+      background:#111827; color:#fff; border-radius:999px; padding:8px 14px; font-size:12px; font-weight:800;
+      box-shadow: 0 6px 18px rgba(17,24,39,0.25); opacity:0.95; }
+    .corner-badge b { color:#fff; }
+
+  </style>
+<div class="corner-badge">Created by <b>Sankrit</b> & <b>Abhay</b></div>
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" id="tabDash">Dashboard</div>
+      <div class="tab" id="tabAbout">About</div>
+    </div>
+
+    <div id="panelDash">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>Three-Bucket Portfolio — Advanced Dashboard</h1>
+      </div>
+
+      <div class="card">
+        <h2>Three‑Bucket Strategy (summary)</h2>
+        <p class="lead">
+          <b>P1 (Cash):</b> one year of spending; used in <i>negative</i> market years, then topped up from P2 next non‑negative year. <br>
+          <b>P2 (Core Growth):</b> main withdrawal source in non‑negative years; if P2 hits $0, refill from P3 toward initial level. <br>
+          <b>P3 (Long‑term Growth):</b> contributions early; grows at P2 path +2%; only used to refill P2.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Controls</h2>
+        <div class="row">
+          <div class="group">
+            <h3>P2 — Core Growth & Withdrawals</h3>
+            <div class="slider-wrap">
+              <label for="p2Start">P2 starting balance</label>
+              <div>
+                <input id="p2Start" type="range" min="2000000" max="7000000" step="50000" value="4500000">
+                <div style="text-align:right"><span id="p2StartLabel" class="pill">$4,500,000</span></div>
+              </div>
+              <div class="desc">Initial size of the investment portfolio that funds withdrawals in non‑negative years.</div>
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>P1 — Cash Buffer</h3>
+            <div class="slider-wrap">
+              <label for="baseSpend">Starting withdrawal (Year 3) & P1 starting cash</label>
+              <div>
+                <input id="baseSpend" type="range" min="100000" max="600000" step="10000" value="250000">
+                <div style="text-align:right"><span id="baseSpendLabel" class="pill">$250,000</span></div>
+              </div>
+              <div class="desc">Sets both the emergency cash pile (P1) and the first annual withdrawal. This grows with inflation and caps at the limit below.</div>
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>P3 — Long‑Term Growth / Reserve</h3>
+            <div class="slider-wrap">
+              <label for="p3Start">P3 starting balance</label>
+              <div>
+                <input id="p3Start" type="range" min="0" max="5000000" step="50000" value="1000000">
+                <div style="text-align:right"><span id="p3StartLabel" class="pill">$1,000,000</span></div>
+              </div>
+              <div class="desc">Initial size of P3. No routine withdrawals; used to replenish P2 only if P2 is depleted.</div>
+            </div>
+            <div class="switch">
+              <input type="checkbox" id="p3ContribOn" checked>
+              <label for="p3ContribOn">Enable P3 contributions (first 10 years)</label>
+            </div>
+            <div class="slider-wrap">
+              <label for="p3ContribAmt">P3 contribution / year</label>
+              <div>
+                <input id="p3ContribAmt" type="range" min="0" max="300000" step="10000" value="180000">
+                <div style="text-align:right"><span id="p3ContribAmtLabel" class="pill">$180,000</span></div>
+              </div>
+              <div class="desc">Annual amount added to Portfolio 3 during contribution years (if enabled).</div>
+            </div>
+            <div class="slider-wrap">
+              <label for="p3ContribYears">P3 contribution years</label>
+              <div>
+                <input id="p3ContribYears" type="range" min="0" max="20" step="1" value="10">
+                <div style="text-align:right"><span id="p3ContribYearsLabel" class="pill">10 years</span></div>
+              </div>
+              <div class="desc">Number of years the P3 contributions continue.</div>
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>Spending & Extras</h3>
+            <div class="slider-wrap">
+              <label for="infl">Inflation (withdrawal growth)</label>
+              <div>
+                <input id="infl" type="range" min="0" max="10" step="0.1" value="7">
+                <div style="text-align:right"><span id="inflLabel" class="pill">7.0%</span></div>
+              </div>
+              <div class="desc">Rate at which annual withdrawals increase each year until reaching the cap.</div>
+            </div>
+            <div class="slider-wrap">
+              <label for="cap">Withdrawal cap</label>
+              <div>
+                <input id="cap" type="range" min="200000" max="1000000" step="10000" value="400000">
+                <div style="text-align:right"><span id="capLabel" class="pill">$400,000</span></div>
+              </div>
+              <div class="desc">Maximum annual withdrawal allowed, regardless of inflation growth.</div>
+            </div>
+            <div class="switch">
+              <input type="checkbox" id="lumpsOn">
+              <label for="lumpsOn">Enable periodic lump-sum from P2</label>
+            </div>
+            <div class="slider-wrap">
+              <label for="lumpAmt">Lump amount</label>
+              <div>
+                <input id="lumpAmt" type="range" min="0" max="1000000" step="25000" value="500000">
+                <div style="text-align:right"><span id="lumpAmtLabel" class="pill">$500,000</span></div>
+              </div>
+              <div class="desc">Size of the periodic extra withdrawal taken from Portfolio 2 (if enabled).</div>
+            </div>
+            <div class="slider-wrap">
+              <label for="lumpEvery">Every N years</label>
+              <div>
+                <input id="lumpEvery" type="range" min="2" max="10" step="1" value="5">
+                <div style="text-align:right"><span id="lumpEveryLabel" class="pill">5 years</span></div>
+              </div>
+              <div class="desc">How often the lump-sum withdrawal occurs (e.g., every 5 years).</div>
+            </div>
+            <div class="slider-wrap">
+              <label for="lumpStart">First lump year</label>
+              <div>
+                <input id="lumpStart" type="range" min="2025" max="2064" step="1" value="2029">
+                <div style="text-align:right"><span id="lumpStartLabel" class="pill">2029</span></div>
+              </div>
+              <div class="desc">Calendar year when the first lump-sum withdrawal is taken.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <span class="small">Adjust settings, then tap Simulate.</span>
+          <button id="simulateBtn">Simulate</button>
+        </div>
+        <div class="small">P3 return each year = P2 path + 2 percentage points. P1 starts equal to the “Starting withdrawal” value, is used in negative years, and is replenished from P2 in the next non‑negative year.</div>
+      </div>
+
+      <div class="card">
+        <h2>Metrics (across all 51 windows)</h2>
+        <table class="metrics" id="metricsTable"></table>
+      </div>
+
+      <div class="card">
+        <h2>Worst 5 P2 trajectories</h2>
+        <div id="worst5"></div>
+      </div>
+
+      <div class="card">
+        <h2>All 51 P2 trajectories</h2>
+        <div id="all51"></div>
+        <div class="small">Tip: tap legend items to hide/show individual windows.</div>
+      </div>
+    </div>
+
+    <div id="panelAbout" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>About this model</h1>
+      </div>
+      <div class="card about">
+        <h2>Three‑Bucket Retirement Strategy</h2>
+        <p><b>Portfolio 1 (P1) — Cash:</b> Starts equal to your chosen “Starting withdrawal” value. Used to fund spending in years when market returns are negative. In the next non‑negative year, P2 tops P1 back up to that year’s target (equal to that year’s scheduled withdrawal).</p>
+        <p><b>Portfolio 2 (P2) — Core Growth & Withdrawals:</b> Main engine for spending in non‑negative return years. Annual withdrawal begins in year 3 at your base value and grows by your inflation slider, capped by the withdrawal cap. If P2 is ever depleted to $0, it is replenished from P3 toward its initial starting level.</p>
+        <p><b>Portfolio 3 (P3) — Long‑Term Growth / Reserve:</b> No routine withdrawals. Optional contributions occur during your chosen contribution years. Each year P3 compounds at the same rolling market path as P2 plus a fixed premium of +2 percentage points. P3 only funds P2 when P2 is depleted.</p>
+      </div>
+
+      <div class="card about">
+        <h2>Simulation Method & Assumptions</h2>
+        <ul>
+          <li><b>Horizon:</b> 40 years (2025–2064), evaluated across <b>51 rolling historical windows</b> (1935–1974 through 1985–2024) remapped to future years.</li>
+          <li><b>Returns:</b> P2 follows the historical total‑return path of each window; P3 earns that path <i>plus</i> +2% each year.</li>
+          <li><b>P3 start:</b> Adjustable by slider. Default $1,000,000.</li>
+          <li><b>Spending:</b> Withdrawals begin in year 3, grow by the inflation slider, and are capped by the cap slider. In negative years, spending draws from P1; otherwise from P2. Any shortfall cascades to P2, then P3.</li>
+          <li><b>P1 Target:</b> Each year’s P1 target equals that year’s scheduled withdrawal.</li>
+          <li><b>Replenishments:</b> P1 is replenished from P2 in the next non‑negative year if below target. P2 is replenished from P3 when P2 hits $0 (toward its initial starting balance).</li>
+          <li><b>Lump‑sum option:</b> Optional periodic extra withdrawals from P2 (amount, cadence, start year) can be enabled.</li>
+        </ul>
+        <p class="small">This is an educational planning tool—not investment advice. Taxes, fees, trading frictions, sequence risk beyond annual granularity, and behavioral constraints are not modeled.</p>
+      </div>
+    </div>
+
+    <div class="footer">© <script>document.write(new Date().getFullYear());</script></div>
+  </div>
+
+<script>
+const START_FUTURE = 2025;
+const HORIZON = 40;
+const YEARS = Array.from({length: HORIZON}, (_,i)=>START_FUTURE+i);
+const SP500 = {"1935": 47.67, "1936": 33.92, "1937": -35.03, "1938": 31.12, "1939": -0.41, "1940": -9.78, "1941": -11.59, "1942": 20.34, "1943": 25.9, "1944": 19.75, "1945": 36.44, "1946": -8.07, "1947": 5.71, "1948": 5.5, "1949": 18.79, "1950": 31.71, "1951": 24.02, "1952": 18.37, "1953": -0.99, "1954": 52.62, "1955": 31.56, "1956": 6.56, "1957": -10.78, "1958": 43.36, "1959": 11.96, "1960": 0.47, "1961": 26.89, "1962": -8.73, "1963": 22.8, "1964": 16.48, "1965": 12.45, "1966": -10.06, "1967": 23.98, "1968": 11.06, "1969": -8.5, "1970": 4.01, "1971": 14.31, "1972": 18.98, "1973": -14.66, "1974": -26.47, "1975": 37.2, "1976": 23.84, "1977": -7.18, "1978": 6.56, "1979": 18.44, "1980": 32.42, "1981": -4.91, "1982": 21.55, "1983": 22.56, "1984": 6.27, "1985": 31.73, "1986": 18.67, "1987": 5.25, "1988": 16.61, "1989": 31.69, "1990": -3.1, "1991": 30.47, "1992": 7.62, "1993": 10.08, "1994": 1.32, "1995": 37.58, "1996": 22.96, "1997": 33.36, "1998": 28.58, "1999": 21.04, "2000": -9.1, "2001": -11.89, "2002": -22.1, "2003": 28.68, "2004": 10.88, "2005": 4.91, "2006": 15.79, "2007": 5.49, "2008": -37.0, "2009": 26.46, "2010": 15.06, "2011": 2.11, "2012": 16.0, "2013": 32.39, "2014": 13.69, "2015": 1.38, "2016": 11.96, "2017": 21.83, "2018": -4.38, "2019": 31.49, "2020": 18.4, "2021": 28.71, "2022": -18.11, "2023": 26.29, "2024": 25.02};
+const WINDOW_STARTS = Array.from({length: 51}, (_,i)=>1935+i);
+
+function spendAmount(i, baseSpend, infl, cap) {
+  if (i < 3) return 0.0;
+  const amt = baseSpend * Math.pow(1+infl, i-3);
+  return Math.min(cap, amt);
+}
+
+function simulateWindow(windowStart, p2Start, p3Start, baseSpend=250000.0, infl=0.07, cap=400000.0,
+                        contribOn=true, contribAmt=180000.0, contribYears=10,
+                        lumpsOn=false, lumpAmt=0.0, lumpEvery=5, lumpStart=2029) {
+  const rSeq = Array.from({length: HORIZON}, (_,i)=> SP500[windowStart+i]/100.0);
+  const rP3 = rSeq.map(r => r + 0.02);
+
+  let p2 = p2Start;
+  let p3 = p3Start;
+  let p1 = baseSpend;
+
+  let p1Needs = false;
+  const p1ReplYears = [];
+  const p2ReplYears = [];
+
+  const p2SOY = [];
+  const p1EOY = [];
+
+  let p2Min = p2;
+  let minP2Val = p2;
+  let minP2Idx = 0;
+
+  for (let i=1; i<=HORIZON; i++) {
+    const yr = START_FUTURE + (i-1);
+    const r = rSeq[i-1];
+    const rp3 = rP3[i-1];
+
+    p2SOY.push(p2);
+    if (p2 < minP2Val) { minP2Val = p2; minP2Idx = i-1; }
+
+    if (contribOn && i <= contribYears) p3 += contribAmt;
+    p3 *= (1+rp3);
+    p2 *= (1+r);
+
+    const S = spendAmount(i, baseSpend, infl, cap);
+    const p1Target = S;
+
+    if (r >= 0 && p1Needs && p1 < p1Target) {
+      const top = Math.min(p1Target - p1, p2);
+      if (top > 0) { p2 -= top; p1 += top; p1ReplYears.push(yr); }
+      p1Needs = (p1 < p1Target);
+    }
+
+    if (S > 0) {
+      if (r < 0) {
+        const useP1 = Math.min(S, p1); p1 -= useP1;
+        let short = S - useP1;
+        if (short > 0) { const t = Math.min(short, p2); p2 -= t; short -= t; }
+        if (short > 0) { const t = Math.min(short, p3); p3 -= t; short -= t; }
+        if (p1 < p1Target) p1Needs = true;
+      } else {
+        const useP2 = Math.min(S, p2); p2 -= useP2;
+        let short = S - useP2;
+        if (short > 0 && p1 > 0) { const t = Math.min(short, p1); p1 -= t; short -= t; p1Needs = true; }
+        if (short > 0) { const t = Math.min(short, p3); p3 -= t; short -= t; }
+      }
+    }
+
+    if (lumpsOn && yr >= lumpStart && ((yr - lumpStart) % lumpEvery === 0)) {
+      if (p2 >= lumpAmt) {
+        p2 -= lumpAmt;
+      } else {
+        let rem = lumpAmt - p2; p2 = 0.0;
+        const take = Math.min(rem, p3); p3 -= take; rem -= take;
+      }
+    }
+
+    if (p2 <= 0) {
+      const need = p2Start - p2;
+      const xfer = Math.min(need, p3);
+      if (xfer > 0) { p3 -= xfer; p2 += xfer; p2ReplYears.push(yr); }
+    }
+
+    p1EOY.push(p1);
+    p2Min = Math.min(p2Min, p2);
+  }
+
+  return {
+    summary: {
+      window: windowStart + "-" + (windowStart + HORIZON - 1),
+      P2_End: p2,
+      P3_End: p3,
+      P1_Repl_Count: p1ReplYears.length,
+      P2_Repl_Count: p2ReplYears.length,
+      P2_Min: p2Min,
+      P2_Min_Year: YEARS[minP2Idx]
+    },
+    trace: { Year: YEARS, P2_SOY: p2SOY, P1_EOY: p1EOY }
+  };
+}
+
+function runBatch(params) {
+  const summaries = [];
+  const traces = { };
+  for (const ws of WINDOW_STARTS) {
+    const res = simulateWindow(
+      ws, params.p2Start, params.p3Start, params.baseSpend,
+      params.infl, params.cap,
+      params.p3ContribOn, params.p3ContribAmt, params.p3ContribYears,
+      params.lumpsOn, params.lumpAmt, params.lumpEvery, params.lumpStart
+    );
+    summaries.push(res.summary);
+    traces[res.summary.window] = res.trace;
+  }
+  return { summaries, traces };
+}
+
+function fmtMoney(x) {
+  if (!isFinite(x)) return "—";
+  const v = Math.round(x);
+  return "$" + v.toLocaleString();
+}
+
+function renderMetrics(summaries) {
+  const totalP1 = summaries.reduce((a,s)=>a+s.P1_Repl_Count,0);
+  const totalP2 = summaries.reduce((a,s)=>a+s.P2_Repl_Count,0);
+  const bestP2 = summaries.reduce((a,s)=> s.P2_End>a.P2_End ? s : a, summaries[0]);
+  const worstP2 = summaries.reduce((a,s)=> s.P2_End<a.P2_End ? s : a, summaries[0]);
+  const bestP3 = summaries.reduce((a,s)=> s.P3_End>a.P3_End ? s : a, summaries[0]);
+  const worstP3 = summaries.reduce((a,s)=> s.P3_End<a.P3_End ? s : a, summaries[0]);
+
+  const rows = [
+    ["Total P1 replenishments", totalP1.toLocaleString()],
+    ["Total P2 replenishments", totalP2.toLocaleString()],
+    ["Best terminal P2 (window)", fmtMoney(bestP2.P2_End) + " — " + bestP2.window],
+    ["Worst terminal P2 (window)", fmtMoney(worstP2.P2_End) + " — " + worstP2.window],
+    ["Best terminal P3 (window)", fmtMoney(bestP3.P3_End) + " — " + bestP3.window],
+    ["Worst terminal P3 (window)", fmtMoney(worstP3.P3_End) + " — " + worstP3.window],
+  ];
+
+  const tbl = document.getElementById("metricsTable");
+  tbl.innerHTML = rows.map(r => "<tr><td class='metric'>" + r[0] + "</td><td>" + r[1] + "</td></tr>").join("");
+}
+
+function renderWorst5(summaries, traces) {
+  const sorted = summaries.slice().sort((a,b)=>a.P2_End-b.P2_End).slice(0,5);
+  const palette = ["#1f77b4","#2ca02c","#ff7f0e","#9467bd","#8c564b"];
+  const data = sorted.map((s,i)=> ({
+    x: traces[s.window].Year,
+    y: traces[s.window].P2_SOY,
+    type: "scatter",
+    mode: "lines",
+    name: s.window,
+    line: { width: 3, color: palette[i] }
+  }));
+  const layout = {
+    title: "Worst 5 P2 trajectories",
+    xaxis: { title: "Year" },
+    yaxis: { title: "P2 Balance ($)" },
+    hovermode: "x unified",
+    legend: { title: { text: "Rolling Window" } },
+    margin: { l: 40, r: 20, t: 50, b: 40 }
+  };
+  Plotly.newPlot("worst5", data, layout, {responsive: true});
+}
+
+function renderAll51(summaries, traces) {
+  const keys = summaries.map(s => s.window);
+  const data = [];
+  for (let i=0; i<keys.length; i++) {
+    const w = keys[i];
+    const color = "hsl(" + Math.round(360*i/keys.length) + ",60%,50%)";
+    data.push({
+      x: traces[w].Year,
+      y: traces[w].P2_SOY,
+      type: "scatter",
+      mode: "lines",
+      name: w,
+      line: { width: 1.5, color: color }
+    });
+  }
+  const layout = {
+    title: "All 51 P2 trajectories",
+    xaxis: { title: "Year" },
+    yaxis: { title: "P2 Balance ($)" },
+    hovermode: "x unified",
+    legend: { font: { size: 10 }, orientation: "h", yanchor: "bottom", y: 1.02, xanchor: "left", x: 0, title: { text: "Rolling Window" } },
+    margin: { l: 40, r: 20, t: 50, b: 40 }
+  };
+  Plotly.newPlot("all51", data, layout, {responsive: true});
+}
+
+function readParams() {
+  const p2Start = parseFloat(document.getElementById("p2Start").value);
+  const p3Start = parseFloat(document.getElementById("p3Start").value);
+  const baseSpend = parseFloat(document.getElementById("baseSpend").value);
+  const infl = parseFloat(document.getElementById("infl").value)/100.0;
+  const cap = parseFloat(document.getElementById("cap").value);
+  const p3ContribOn = document.getElementById("p3ContribOn").checked;
+  const p3ContribAmt = parseFloat(document.getElementById("p3ContribAmt").value);
+  const p3ContribYears = parseInt(document.getElementById("p3ContribYears").value);
+  const lumpsOn = document.getElementById("lumpsOn").checked;
+  const lumpAmt = parseFloat(document.getElementById("lumpAmt").value);
+  const lumpEvery = parseInt(document.getElementById("lumpEvery").value);
+  const lumpStart = parseInt(document.getElementById("lumpStart").value);
+  return {p2Start, p3Start, baseSpend, infl, cap, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart};
+}
+
+function updateLabels() {
+  const fmtUSD = (x)=> x.toLocaleString(undefined, {style:'currency', currency:'USD', maximumFractionDigits:0});
+  document.getElementById("p2StartLabel").textContent = fmtUSD(parseFloat(document.getElementById("p2Start").value));
+  document.getElementById("p3StartLabel").textContent = fmtUSD(parseFloat(document.getElementById("p3Start").value));
+  document.getElementById("baseSpendLabel").textContent = fmtUSD(parseFloat(document.getElementById("baseSpend").value));
+  document.getElementById("p3ContribAmtLabel").textContent = fmtUSD(parseFloat(document.getElementById("p3ContribAmt").value));
+  document.getElementById("p3ContribYearsLabel").textContent = parseInt(document.getElementById("p3ContribYears").value) + " years";
+  document.getElementById("inflLabel").textContent = parseFloat(document.getElementById("infl").value).toFixed(1) + "%";
+  document.getElementById("capLabel").textContent = fmtUSD(parseFloat(document.getElementById("cap").value));
+  document.getElementById("lumpAmtLabel").textContent = fmtUSD(parseFloat(document.getElementById("lumpAmt").value));
+  document.getElementById("lumpEveryLabel").textContent = parseInt(document.getElementById("lumpEvery").value) + " years";
+  document.getElementById("lumpStartLabel").textContent = parseInt(document.getElementById("lumpStart").value);
+}
+
+async function simulate() {
+  const btn = document.getElementById("simulateBtn");
+  btn.disabled = true;
+  btn.textContent = "Simulating…";
+  try {
+    updateLabels();
+    const params = readParams();
+    const res = runBatch(params);
+    renderMetrics(res.summaries);
+    renderWorst5(res.summaries, res.traces);
+    renderAll51(res.summaries, res.traces);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Simulate";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", ()=> {
+  ["p2Start","p3Start","baseSpend","infl","cap","p3ContribOn","p3ContribAmt","p3ContribYears","lumpsOn","lumpAmt","lumpEvery","lumpStart"].forEach(id=> {
+    document.getElementById(id).addEventListener("input", updateLabels);
+    document.getElementById(id).addEventListener("change", updateLabels);
+  });
+  document.getElementById("simulateBtn").addEventListener("click", simulate);
+  const tabDash = document.getElementById("tabDash");
+  const tabAbout = document.getElementById("tabAbout");
+  const panelDash = document.getElementById("panelDash");
+  const panelAbout = document.getElementById("panelAbout");
+  function activate(tab) {
+    if (tab === "dash") {
+      tabDash.classList.add("active"); tabAbout.classList.remove("active");
+      panelDash.style.display = ""; panelAbout.style.display = "none";
+    } else {
+      tabAbout.classList.add("active"); tabDash.classList.remove("active");
+      panelAbout.style.display = ""; panelDash.style.display = "none";
+    }
+  }
+  tabDash.addEventListener("click", ()=>activate("dash"));
+  tabAbout.addEventListener("click", ()=>activate("about"));
+  updateLabels();
+  simulate();
+});
+</script>
+</body>
+</html>
