@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -52,14 +51,7 @@
     .group { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 10px 0 14px; background: #fff; }
     .group h3 { margin-top: 0; }
     .footer { text-align:center; color:#94a3b8; font-size:12px; margin: 24px 0 8px 0; }
-  
-    .corner-badge { position: fixed; top: 12px; right: 12px; z-index: 9999;
-      background:#111827; color:#fff; border-radius:999px; padding:8px 14px; font-size:12px; font-weight:800;
-      box-shadow: 0 6px 18px rgba(17,24,39,0.25); opacity:0.95; }
-    .corner-badge b { color:#fff; }
-
   </style>
-<div class="corner-badge">Created by <b>Sankrit</b> & <b>Abhay</b></div>
 </head>
 <body>
   <div class="container">
@@ -86,6 +78,26 @@
         <h2>Controls</h2>
         <div class="row">
           <div class="group">
+            <h3>P1 — Cash Buffer</h3>
+            <div class="slider-wrap">
+              <label for="baseSpend">Starting withdrawal (at your chosen start year) & P1 starting cash</label>
+              <div>
+                <input id="baseSpend" type="range" min="100000" max="600000" step="10000" value="250000">
+                <div style="text-align:right"><span id="baseSpendLabel" class="pill">$250,000</span></div>
+              </div>
+              <div class="desc">Sets both the emergency cash pile (P1) and the first annual withdrawal once withdrawals begin. This grows with inflation and caps at the limit below.</div>
+            </div>
+            <div class="slider-wrap">
+              <label for="startYear">Withdrawal start year</label>
+              <div>
+                <input id="startYear" type="range" min="1" max="15" step="1" value="1">
+                <div style="text-align:right"><span id="startYearLabel" class="pill">Year 1</span></div>
+              </div>
+              <div class="desc">Select when withdrawals start (Year 1 = first year, Year 2 = start in second year, etc.).</div>
+            </div>
+          </div>
+
+          <div class="group">
             <h3>P2 — Core Growth & Withdrawals</h3>
             <div class="slider-wrap">
               <label for="p2Start">P2 starting balance</label>
@@ -94,18 +106,6 @@
                 <div style="text-align:right"><span id="p2StartLabel" class="pill">$4,500,000</span></div>
               </div>
               <div class="desc">Initial size of the investment portfolio that funds withdrawals in non‑negative years.</div>
-            </div>
-          </div>
-
-          <div class="group">
-            <h3>P1 — Cash Buffer</h3>
-            <div class="slider-wrap">
-              <label for="baseSpend">Starting withdrawal (Year 3) & P1 starting cash</label>
-              <div>
-                <input id="baseSpend" type="range" min="100000" max="600000" step="10000" value="250000">
-                <div style="text-align:right"><span id="baseSpendLabel" class="pill">$250,000</span></div>
-              </div>
-              <div class="desc">Sets both the emergency cash pile (P1) and the first annual withdrawal. This grows with inflation and caps at the limit below.</div>
             </div>
           </div>
 
@@ -121,7 +121,7 @@
             </div>
             <div class="switch">
               <input type="checkbox" id="p3ContribOn" checked>
-              <label for="p3ContribOn">Enable P3 contributions (first 10 years)</label>
+              <label for="p3ContribOn">Enable P3 contributions</label>
             </div>
             <div class="slider-wrap">
               <label for="p3ContribAmt">P3 contribution / year</label>
@@ -129,7 +129,7 @@
                 <input id="p3ContribAmt" type="range" min="0" max="300000" step="10000" value="180000">
                 <div style="text-align:right"><span id="p3ContribAmtLabel" class="pill">$180,000</span></div>
               </div>
-              <div class="desc">Annual amount added to Portfolio 3 during contribution years (if enabled).</div>
+              <div class="desc">Annual amount added to Portfolio 3 during your contribution years (if enabled).</div>
             </div>
             <div class="slider-wrap">
               <label for="p3ContribYears">P3 contribution years</label>
@@ -137,7 +137,7 @@
                 <input id="p3ContribYears" type="range" min="0" max="20" step="1" value="10">
                 <div style="text-align:right"><span id="p3ContribYearsLabel" class="pill">10 years</span></div>
               </div>
-              <div class="desc">Number of years the P3 contributions continue.</div>
+              <div class="desc">Number of years the P3 contributions continue (default 10).</div>
             </div>
           </div>
 
@@ -149,7 +149,7 @@
                 <input id="infl" type="range" min="0" max="10" step="0.1" value="7">
                 <div style="text-align:right"><span id="inflLabel" class="pill">7.0%</span></div>
               </div>
-              <div class="desc">Rate at which annual withdrawals increase each year until reaching the cap.</div>
+              <div class="desc">Rate at which annual withdrawals increase each year after your chosen start year, until reaching the cap.</div>
             </div>
             <div class="slider-wrap">
               <label for="cap">Withdrawal cap</label>
@@ -221,8 +221,8 @@
       <div class="card about">
         <h2>Three‑Bucket Retirement Strategy</h2>
         <p><b>Portfolio 1 (P1) — Cash:</b> Starts equal to your chosen “Starting withdrawal” value. Used to fund spending in years when market returns are negative. In the next non‑negative year, P2 tops P1 back up to that year’s target (equal to that year’s scheduled withdrawal).</p>
-        <p><b>Portfolio 2 (P2) — Core Growth & Withdrawals:</b> Main engine for spending in non‑negative return years. Annual withdrawal begins in year 3 at your base value and grows by your inflation slider, capped by the withdrawal cap. If P2 is ever depleted to $0, it is replenished from P3 toward its initial starting level.</p>
-        <p><b>Portfolio 3 (P3) — Long‑Term Growth / Reserve:</b> No routine withdrawals. Optional contributions occur during your chosen contribution years. Each year P3 compounds at the same rolling market path as P2 plus a fixed premium of +2 percentage points. P3 only funds P2 when P2 is depleted.</p>
+        <p><b>Portfolio 2 (P2) — Core Growth & Withdrawals:</b> Main engine for spending in non‑negative return years. Annual withdrawals begin at your chosen “Withdrawal start year,” grow by the inflation slider, and are capped by the withdrawal cap. If P2 is ever depleted to $0, it is replenished from P3 toward its initial starting level.</p>
+        <p><b>Portfolio 3 (P3) — Long‑Term Growth / Reserve:</b> No routine withdrawals. Optional contributions occur during your selected contribution years. Each year P3 compounds at the same rolling market path as P2 plus a fixed premium of +2 percentage points. P3 only funds P2 when P2 is depleted.</p>
       </div>
 
       <div class="card about">
@@ -230,8 +230,7 @@
         <ul>
           <li><b>Horizon:</b> 40 years (2025–2064), evaluated across <b>51 rolling historical windows</b> (1935–1974 through 1985–2024) remapped to future years.</li>
           <li><b>Returns:</b> P2 follows the historical total‑return path of each window; P3 earns that path <i>plus</i> +2% each year.</li>
-          <li><b>P3 start:</b> Adjustable by slider. Default $1,000,000.</li>
-          <li><b>Spending:</b> Withdrawals begin in year 3, grow by the inflation slider, and are capped by the cap slider. In negative years, spending draws from P1; otherwise from P2. Any shortfall cascades to P2, then P3.</li>
+          <li><b>Spending:</b> Withdrawals begin at your selected start year, grow by the inflation slider, and are capped by the cap slider. In negative years, spending draws from P1; otherwise from P2. Any shortfall cascades to P2, then P3.</li>
           <li><b>P1 Target:</b> Each year’s P1 target equals that year’s scheduled withdrawal.</li>
           <li><b>Replenishments:</b> P1 is replenished from P2 in the next non‑negative year if below target. P2 is replenished from P3 when P2 hits $0 (toward its initial starting balance).</li>
           <li><b>Lump‑sum option:</b> Optional periodic extra withdrawals from P2 (amount, cadence, start year) can be enabled.</li>
@@ -240,7 +239,7 @@
       </div>
     </div>
 
-    <div class="footer">© <script>document.write(new Date().getFullYear());</script></div>
+    <div class="footer">© <script>document.write(new Date().getFullYear());</script> • Created by Abhay & Sankrit</div>
   </div>
 
 <script>
@@ -250,15 +249,16 @@ const YEARS = Array.from({length: HORIZON}, (_,i)=>START_FUTURE+i);
 const SP500 = {"1935": 47.67, "1936": 33.92, "1937": -35.03, "1938": 31.12, "1939": -0.41, "1940": -9.78, "1941": -11.59, "1942": 20.34, "1943": 25.9, "1944": 19.75, "1945": 36.44, "1946": -8.07, "1947": 5.71, "1948": 5.5, "1949": 18.79, "1950": 31.71, "1951": 24.02, "1952": 18.37, "1953": -0.99, "1954": 52.62, "1955": 31.56, "1956": 6.56, "1957": -10.78, "1958": 43.36, "1959": 11.96, "1960": 0.47, "1961": 26.89, "1962": -8.73, "1963": 22.8, "1964": 16.48, "1965": 12.45, "1966": -10.06, "1967": 23.98, "1968": 11.06, "1969": -8.5, "1970": 4.01, "1971": 14.31, "1972": 18.98, "1973": -14.66, "1974": -26.47, "1975": 37.2, "1976": 23.84, "1977": -7.18, "1978": 6.56, "1979": 18.44, "1980": 32.42, "1981": -4.91, "1982": 21.55, "1983": 22.56, "1984": 6.27, "1985": 31.73, "1986": 18.67, "1987": 5.25, "1988": 16.61, "1989": 31.69, "1990": -3.1, "1991": 30.47, "1992": 7.62, "1993": 10.08, "1994": 1.32, "1995": 37.58, "1996": 22.96, "1997": 33.36, "1998": 28.58, "1999": 21.04, "2000": -9.1, "2001": -11.89, "2002": -22.1, "2003": 28.68, "2004": 10.88, "2005": 4.91, "2006": 15.79, "2007": 5.49, "2008": -37.0, "2009": 26.46, "2010": 15.06, "2011": 2.11, "2012": 16.0, "2013": 32.39, "2014": 13.69, "2015": 1.38, "2016": 11.96, "2017": 21.83, "2018": -4.38, "2019": 31.49, "2020": 18.4, "2021": 28.71, "2022": -18.11, "2023": 26.29, "2024": 25.02};
 const WINDOW_STARTS = Array.from({length: 51}, (_,i)=>1935+i);
 
-function spendAmount(i, baseSpend, infl, cap) {
-  if (i < 3) return 0.0;
-  const amt = baseSpend * Math.pow(1+infl, i-3);
+function spendAmount(i, baseSpend, infl, cap, startIdx) {
+  if (i < startIdx) return 0.0;
+  const amt = baseSpend * Math.pow(1+infl, i-startIdx);
   return Math.min(cap, amt);
 }
 
 function simulateWindow(windowStart, p2Start, p3Start, baseSpend=250000.0, infl=0.07, cap=400000.0,
                         contribOn=true, contribAmt=180000.0, contribYears=10,
-                        lumpsOn=false, lumpAmt=0.0, lumpEvery=5, lumpStart=2029) {
+                        lumpsOn=false, lumpAmt=0.0, lumpEvery=5, lumpStart=2029,
+                        startIdx=1) {
   const rSeq = Array.from({length: HORIZON}, (_,i)=> SP500[windowStart+i]/100.0);
   const rP3 = rSeq.map(r => r + 0.02);
 
@@ -289,7 +289,7 @@ function simulateWindow(windowStart, p2Start, p3Start, baseSpend=250000.0, infl=
     p3 *= (1+rp3);
     p2 *= (1+r);
 
-    const S = spendAmount(i, baseSpend, infl, cap);
+    const S = spendAmount(i, baseSpend, infl, cap, startIdx);
     const p1Target = S;
 
     if (r >= 0 && p1Needs && p1 < p1Target) {
@@ -354,7 +354,8 @@ function runBatch(params) {
       ws, params.p2Start, params.p3Start, params.baseSpend,
       params.infl, params.cap,
       params.p3ContribOn, params.p3ContribAmt, params.p3ContribYears,
-      params.lumpsOn, params.lumpAmt, params.lumpEvery, params.lumpStart
+      params.lumpsOn, params.lumpAmt, params.lumpEvery, params.lumpStart,
+      params.startIdx
     );
     summaries.push(res.summary);
     traces[res.summary.window] = res.trace;
@@ -450,7 +451,8 @@ function readParams() {
   const lumpAmt = parseFloat(document.getElementById("lumpAmt").value);
   const lumpEvery = parseInt(document.getElementById("lumpEvery").value);
   const lumpStart = parseInt(document.getElementById("lumpStart").value);
-  return {p2Start, p3Start, baseSpend, infl, cap, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart};
+  const startIdx = parseInt(document.getElementById("startYear").value);
+  return {p2Start, p3Start, baseSpend, infl, cap, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart, startIdx};
 }
 
 function updateLabels() {
@@ -465,6 +467,7 @@ function updateLabels() {
   document.getElementById("lumpAmtLabel").textContent = fmtUSD(parseFloat(document.getElementById("lumpAmt").value));
   document.getElementById("lumpEveryLabel").textContent = parseInt(document.getElementById("lumpEvery").value) + " years";
   document.getElementById("lumpStartLabel").textContent = parseInt(document.getElementById("lumpStart").value);
+  document.getElementById("startYearLabel").textContent = "Year " + parseInt(document.getElementById("startYear").value);
 }
 
 async function simulate() {
@@ -485,7 +488,7 @@ async function simulate() {
 }
 
 document.addEventListener("DOMContentLoaded", ()=> {
-  ["p2Start","p3Start","baseSpend","infl","cap","p3ContribOn","p3ContribAmt","p3ContribYears","lumpsOn","lumpAmt","lumpEvery","lumpStart"].forEach(id=> {
+  ["p2Start","p3Start","baseSpend","startYear","infl","cap","p3ContribOn","p3ContribAmt","p3ContribYears","lumpsOn","lumpAmt","lumpEvery","lumpStart"].forEach(id=> {
     document.getElementById(id).addEventListener("input", updateLabels);
     document.getElementById(id).addEventListener("change", updateLabels);
   });
