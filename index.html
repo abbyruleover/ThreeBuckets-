@@ -663,5 +663,65 @@ document.addEventListener("DOMContentLoaded", ()=> {
   simulate();
 });
 </script>
+
+<script>
+(function(){
+  let SHILLER = null;
+  async function loadShiller(){
+    try{
+      const resp = await fetch('shiller_monthly.csv', {cache:'no-store'});
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const text = await resp.text();
+      const lines = text.trim().split(/\r?\n/);
+      const header = lines.shift().split(',').map(s=>s.trim().toLowerCase());
+      const yi = header.findIndex(h=>h==='year');
+      const mi = header.findIndex(h=>h==='month');
+      let ri = header.findIndex(h=>h==='returnpct');
+      if (ri<0) ri = header.findIndex(h=>h==='monthly_return');
+      if (ri<0) ri = header.findIndex(h=>h==='return');
+      if (yi<0 || mi<0 || ri<0) throw new Error('Need Year, Month, ReturnPct/monthly_return');
+      const byYear = {};
+      for(const line of lines){
+        if (!line.trim()) continue;
+        const c = line.split(',').map(s=>s.trim());
+        const y = parseInt(c[yi],10);
+        const m = parseInt(c[mi],10);
+        let r = parseFloat(c[ri]);
+        if (isNaN(r)) continue;
+        if (Math.abs(r)>1.5) r = r/100.0; // percent -> decimal
+        const f = 1 + r;
+        if (!byYear[y]) byYear[y] = new Array(12).fill(1.0);
+        if (m>=1 && m<=12) byYear[y][m-1] = f;
+      }
+      if (!Object.keys(byYear).length) throw new Error('No rows parsed');
+      SHILLER = byYear;
+      const src = document.getElementById('sourceLabel');
+      if (src) src.textContent = 'Shiller monthly (quarterly mode available)';
+      const qm = document.getElementById('quarterlyMode');
+      if (qm) qm.disabled = false;
+    }catch(e){
+      SHILLER = null;
+      const src = document.getElementById('sourceLabel');
+      if (src) src.textContent = 'Annual S&P 500 (embedded)';
+      const qm = document.getElementById('quarterlyMode');
+      if (qm){ qm.checked=false; qm.disabled=true; }
+    }
+    window.SHILLER = SHILLER;
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    try{ loadShiller(); }catch(_e){}
+    const qm = document.getElementById('quarterlyMode');
+    if (qm){
+      qm.addEventListener('change', function(){
+        if (qm.checked && !window.SHILLER){
+          alert('Quarterly mode needs shiller_monthly.csv in the site root.');
+          qm.checked = false;
+        }
+      });
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
