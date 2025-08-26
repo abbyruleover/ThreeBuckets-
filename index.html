@@ -197,8 +197,12 @@
       <footer>Created by Abhay &amp; Sankrit</footer>
     </div>
 
+    
     <div id="panelAbout" style="display:none">
-      <div class="card" style="text-align:center;"><img alt="Three‑Bucket visual" style="max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;" src=<div class="card">
+      <div class="card" style="text-align:center;">
+        <img alt="Three‑Bucket visual" src="three-bucket.png" style="max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;" />
+      </div>
+      <div class="card">
         <h3>The Strategy</h3>
         <p>The Three Bucket Strategy separates your retirement funds by purpose and time horizon:</p>
         <ul>
@@ -209,7 +213,7 @@
         <p><em>Why this helps:</em> P1 smooths sequence risk; P2 keeps most capital invested; P3 preserves long‑run growth and serves as a backstop.</p>
       </div>
       <div class="card">
-        <h3>Assumptions & Mechanics</h3>
+        <h3>Assumptions &amp; Mechanics</h3>
         <ul>
           <li>Horizon: 40 years from 2025 onward; simulated with rolling annual S&amp;P 500 paths (1935–2024).</li>
           <li>Withdrawals: start in Year 3 by default; grow by the inflation slider and stop growing once the cap is reached.</li>
@@ -223,6 +227,7 @@
       </div>
       <footer>Created by Abhay &amp; Sankrit</footer>
     </div>
+
   </main>
 
 <script>
@@ -606,7 +611,9 @@ function readParams() {
   const lumpEvery = parseInt(document.getElementById("lumpEvery").value);
   const lumpStart = parseInt(document.getElementById("lumpStart").value);
   const withdrawDelay = parseInt(document.getElementById("withdrawStartYear").value);
-  return {p2Start, p3Start, baseSpend, infl, cap, optEnable, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart, withdrawDelay};
+  const quarterlyMode = document.getElementById("quarterlyMode").checked;
+  const withdrawQuarter = document.getElementById("withdrawQuarter").value;
+  return {p2Start, p3Start, baseSpend, infl, cap, optEnable, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart, withdrawDelay, quarterlyMode, withdrawQuarter};
 }
 
 let lastTraces = null;
@@ -616,7 +623,17 @@ function simulate(){
   try {
     updateLabels();
     const params = readParams();
-    const res = (params.quarterlyMode && SHILLER) ? (function(){ const out={summaries:[], traces:{}}; for(const ws of WINDOW_STARTS){ const r=simulateWindowQuarterly(ws, params); out.summaries.push(r.summary); out.traces[ws]=r.trace; } return out; })() : runBatch(params);
+    const res = (params.quarterlyMode && SHILLER)
+      ? (function(){
+          const out = { summaries: [], traces: {} };
+          for (const ws of WINDOW_STARTS) {
+            const r = simulateWindowQuarterly(ws, params);
+            out.summaries.push(r.summary);
+            out.traces[ws] = r.trace;
+          }
+          return out;
+        })()
+      : runBatch(params);
     lastTraces = res.traces;
     renderMetrics(res.summaries);
     renderWorst5(res.summaries, res.traces);
@@ -626,6 +643,20 @@ function simulate(){
     btn.disabled = false; btn.textContent = "Simulate";
   }
 }
+
+
+  // Keep labels in sync when toggling quarterly options
+  document.getElementById('quarterlyMode').addEventListener('change', updateLabels);
+  document.getElementById('withdrawQuarter').addEventListener('change', updateLabels);
+  // Accessibility: allow pressing Enter/Space on tabs to switch
+  ['tabDash','tabAbout'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.setAttribute('tabindex','0');
+    el.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
+    });
+  });
+
 
 document.addEventListener("DOMContentLoaded", ()=> {
   document.getElementById("simulateBtn").addEventListener("click", simulate);
