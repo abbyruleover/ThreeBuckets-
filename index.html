@@ -197,12 +197,8 @@
       <footer>Created by Abhay &amp; Sankrit</footer>
     </div>
 
-    
     <div id="panelAbout" style="display:none">
-      <div class="card" style="text-align:center;">
-        <img alt="Three‑Bucket visual" src="three-bucket.png" style="max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;" />
-      </div>
-      <div class="card">
+      <div class="card" style="text-align:center;"><img alt="Three‑Bucket visual" style="max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;" src=<div class="card">
         <h3>The Strategy</h3>
         <p>The Three Bucket Strategy separates your retirement funds by purpose and time horizon:</p>
         <ul>
@@ -213,7 +209,7 @@
         <p><em>Why this helps:</em> P1 smooths sequence risk; P2 keeps most capital invested; P3 preserves long‑run growth and serves as a backstop.</p>
       </div>
       <div class="card">
-        <h3>Assumptions &amp; Mechanics</h3>
+        <h3>Assumptions & Mechanics</h3>
         <ul>
           <li>Horizon: 40 years from 2025 onward; simulated with rolling annual S&amp;P 500 paths (1935–2024).</li>
           <li>Withdrawals: start in Year 3 by default; grow by the inflation slider and stop growing once the cap is reached.</li>
@@ -227,7 +223,6 @@
       </div>
       <footer>Created by Abhay &amp; Sankrit</footer>
     </div>
-
   </main>
 
 <script>
@@ -238,60 +233,51 @@ const SP500 = {"1935": 47.67, "1936": 33.92, "1937": -35.03, "1938": 31.12, "193
 
 // ===== Shiller monthly loader (optional) =====
 let SHILLER = null; // map: {YYYY: [m1Factor, ..., m12Factor]}
+
 async function tryLoadShiller(){
   try{
     const resp = await fetch('shiller_monthly.csv', {cache:'no-store'});
     if (!resp.ok) throw new Error('HTTP '+resp.status);
     const text = await resp.text();
-    // Parse CSV
-    const lines = text.trim().split(/\r?\n/);
+    const lines = text.trim().split(/?
+/);
     const header = lines.shift().split(',').map(h=>h.trim().toLowerCase());
-    const idxDate = header.findIndex(h=> h==='date' || h==='month' || h==='yearmonth');
-    let idxRet = header.findIndex(h=> ['monthly_return','ret','return'].includes(h));
-    let idxTRI = header.findIndex(h=> ['total_return_index','tri','price_index_total_return','sp500_real_total_return_index'].includes(h));
-    if (idxDate<0) throw new Error('No date column');
-    const rows = lines.map(l=> l.split(',').map(s=>s.trim()));
+    const yi = header.findIndex(h=>h==='year');
+    const mi = header.findIndex(h=>h==='month');
+    // accept returnpct / monthly_return / return
+    let ri = header.findIndex(h=>h==='returnpct');
+    if (ri<0) ri = header.findIndex(h=>h==='monthly_return');
+    if (ri<0) ri = header.findIndex(h=>h==='return');
+    if (yi<0 || mi<0 || ri<0) throw new Error('Need Year, Month, ReturnPct (or monthly_return/return)');
     const byYear = {};
-    let prevIndex = null;
-    rows.forEach(row=>{
-      const d = row[idxDate];
-      const m = d.match(/(\d{4})[-/.](\d{1,2})/);
-      if (!m) return;
-      const y = parseInt(m[1]); const mo = parseInt(m[2]);
-      let factor = null;
-      if (idxRet>=0){
-        const r = parseFloat(row[idxRet]);
-        if (!isNaN(r)) factor = 1 + (Math.abs(r)>1.5 ? r/100.0 : r);
-      } else if (idxTRI>=0){
-        const tri = parseFloat(row[idxTRI]);
-        if (!isNaN(tri) && prevIndex!=null){
-          const f = tri/prevIndex;
-          factor = f>0 ? f : null;
-        }
-        prevIndex = isNaN(tri) ? prevIndex : tri;
-      }
-      if (factor==null) return;
+    for (const line of lines){
+      if (!line.trim()) continue;
+      const c = line.split(',').map(s=>s.trim());
+      const y = parseInt(c[yi],10);
+      const m = parseInt(c[mi],10);
+      let r = parseFloat(c[ri]); if (isNaN(r)) continue;
+      // If in percents (e.g., 7.21 meaning 7.21%), normalize to decimal.
+      if (Math.abs(r) > 1.5) r = r/100.0;
+      const f = 1 + r;
       if (!byYear[y]) byYear[y] = new Array(12).fill(1.0);
-      if (mo>=1 && mo<=12) byYear[y][mo-1] = factor;
-    });
-    const cleaned = {};
-    Object.keys(byYear).forEach(y=>{
-      const arr = byYear[y];
-      if (arr.filter(v=>v!=null).length>=10) cleaned[y]=arr;
-    });
-    if (Object.keys(cleaned).length===0) throw new Error('No monthly data parsed');
-    SHILLER = cleaned;
-    document.getElementById('sourceLabel').textContent = 'Shiller monthly (quarterly mode available)';
+      if (m>=1 && m<=12) byYear[y][m-1] = f;
+    }
+    if (!Object.keys(byYear).length) throw new Error('No monthly rows parsed');
+    window.SHILLER = byYear;
+    const label = document.getElementById('sourceLabel');
+    if (label) label.textContent = 'Shiller monthly (quarterly mode available)';
     const qm = document.getElementById('quarterlyMode');
-    if (qm){ qm.disabled = false; }
+    if (qm) qm.disabled = false;
   }catch(e){
-    SHILLER = null;
-    document.getElementById('sourceLabel').textContent = 'Annual S&P 500 (embedded)';
+    window.SHILLER = null;
+    const label = document.getElementById('sourceLabel');
+    if (label) label.textContent = 'Annual S&P 500 (embedded)';
     const qm = document.getElementById('quarterlyMode');
-    if (qm){ qm.checked = false; qm.disabled = true; }
+    if (qm){ qm.checked=false; qm.disabled=true; }
   }
 }
 document.addEventListener('DOMContentLoaded', tryLoadShiller);
+
 
 function quarterEndMonth(q){ return q==='Q1'?3 : q==='Q2'?6 : q==='Q3'?9 : 12; }
 
@@ -611,9 +597,7 @@ function readParams() {
   const lumpEvery = parseInt(document.getElementById("lumpEvery").value);
   const lumpStart = parseInt(document.getElementById("lumpStart").value);
   const withdrawDelay = parseInt(document.getElementById("withdrawStartYear").value);
-  const quarterlyMode = document.getElementById("quarterlyMode").checked;
-  const withdrawQuarter = document.getElementById("withdrawQuarter").value;
-  return {p2Start, p3Start, baseSpend, infl, cap, optEnable, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart, withdrawDelay, quarterlyMode, withdrawQuarter};
+  return {p2Start, p3Start, baseSpend, infl, cap, optEnable, p3ContribOn, p3ContribAmt, p3ContribYears, lumpsOn, lumpAmt, lumpEvery, lumpStart, withdrawDelay};
 }
 
 let lastTraces = null;
@@ -623,17 +607,7 @@ function simulate(){
   try {
     updateLabels();
     const params = readParams();
-    const res = (params.quarterlyMode && SHILLER)
-      ? (function(){
-          const out = { summaries: [], traces: {} };
-          for (const ws of WINDOW_STARTS) {
-            const r = simulateWindowQuarterly(ws, params);
-            out.summaries.push(r.summary);
-            out.traces[ws] = r.trace;
-          }
-          return out;
-        })()
-      : runBatch(params);
+    const res = (params.quarterlyMode && SHILLER) ? (function(){ const out={summaries:[], traces:{}}; for(const ws of WINDOW_STARTS){ const r=simulateWindowQuarterly(ws, params); out.summaries.push(r.summary); out.traces[ws]=r.trace; } return out; })() : runBatch(params);
     lastTraces = res.traces;
     renderMetrics(res.summaries);
     renderWorst5(res.summaries, res.traces);
@@ -643,20 +617,6 @@ function simulate(){
     btn.disabled = false; btn.textContent = "Simulate";
   }
 }
-
-
-  // Keep labels in sync when toggling quarterly options
-  document.getElementById('quarterlyMode').addEventListener('change', updateLabels);
-  document.getElementById('withdrawQuarter').addEventListener('change', updateLabels);
-  // Accessibility: allow pressing Enter/Space on tabs to switch
-  ['tabDash','tabAbout'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.setAttribute('tabindex','0');
-    el.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); el.click(); }
-    });
-  });
-
 
 document.addEventListener("DOMContentLoaded", ()=> {
   document.getElementById("simulateBtn").addEventListener("click", simulate);
