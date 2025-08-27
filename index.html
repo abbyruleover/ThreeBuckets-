@@ -29,7 +29,13 @@
   .muted{ color:var(--muted); font-size:12px; }
   .toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
   button{ background:var(--accent); color:#fff; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
-#simulateBtn{ position:fixed; right:16px; bottom:16px; box-shadow:0 8px 24px rgba(16,24,40,.18); z-index:50; }
+.ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+#btnBar{ position:fixed; right:16px; bottom:16px; display:flex; gap:10px; z-index:50; }
+#simulateFloat{ box-shadow:0 8px 24px rgba(16,24,40,.18); }
+#resetFloat{ background:#f0f0f0; color:#333; border:1px solid #ccc; }
+#btnBar{ position:fixed; right:16px; bottom:16px; display:flex; gap:10px; z-index:50; }
+#simulateFloat{ box-shadow:0 8px 24px rgba(16,24,40,.18); }
+#resetFloat{ background:#f0f0f0; color:#333; border:1px solid #ccc; }
   .kpi{ display:inline-block; padding:4px 8px; border-radius:999px; background:var(--accent-weak); border:1px solid #cbd9ff; color:#123; font-size:12px; }
   #metrics table{ width:100%; border-collapse:collapse; }
   #metrics th, #metrics td{ border-bottom:1px solid var(--line); padding:8px; text-align:left; font-size:12px; }
@@ -116,7 +122,8 @@
 
   <div class="card toolbar">
     <div class="muted">Adjust settings, define your scope, then tap Simulate. The window slider browses results live.</div>
-    <button id="simulateBtn">Simulate</button>
+    
+    
   </div>
 
   <!-- ORDER: Worst-5, Metrics, Selected Window, Slider -->
@@ -196,14 +203,61 @@ function initScope(){
   const desiredEnd=Math.min(maxY, PREFERRED_END);
   startYear.min=minY; startYear.max=maxY-39;
   endYear.min=minY+39; endYear.max=maxY;
-  if(!endYear.value) endYear.value=desiredEnd;
-  if(!startYear.value) startYear.value=(+endYear.value)-39;
+  endYear.value=desiredEnd;
+  startYear.value=Math.max(minY, 1935);
   if((+endYear.value)<(+startYear.value)+39) endYear.value=(+startYear.value)+39;
   startYearV.textContent=startYear.value;
   endYearV.textContent=endYear.value;
   badgeWin.textContent=startYear.value+'–'+endYear.value;
 }
 initScope();
+
+// ---- Persistence (localStorage) ----
+function readAllControls(){
+  return {
+    w0:w0.value, infl:infl.value, cap:cap.value, hysa:hysa.value, startW:startW.value,
+    quarterlyMode: quarterlyMode.checked, withdrawQuarter: withdrawQuarter.value,
+    p2:p2.value, p3:p3.value, p3ContribOn: p3ContribOn.checked,
+    p3ContribAmt: p3ContribAmt.value, p3ContribYears: p3ContribYears.value,
+    startYear: startYear.value, endYear: endYear.value, subIdx: subIdx.value
+  };
+}
+function applyControls(o){
+  if(!o) return;
+  if(o.w0!=null) w0.value=o.w0;
+  if(o.infl!=null) infl.value=o.infl;
+  if(o.cap!=null) cap.value=o.cap;
+  if(o.hysa!=null) hysa.value=o.hysa;
+  if(o.startW!=null) startW.value=o.startW;
+  if(o.quarterlyMode!=null) quarterlyMode.checked=!!o.quarterlyMode;
+  if(o.withdrawQuarter) withdrawQuarter.value=o.withdrawQuarter;
+  if(o.p2!=null) p2.value=o.p2;
+  if(o.p3!=null) p3.value=o.p3;
+  if(o.p3ContribOn!=null) p3ContribOn.checked=!!o.p3ContribOn;
+  if(o.p3ContribAmt!=null) p3ContribAmt.value=o.p3ContribAmt;
+  if(o.p3ContribYears!=null) p3ContribYears.value=o.p3ContribYears;
+  if(o.startYear!=null) startYear.value=o.startYear;
+  if(o.endYear!=null) endYear.value=o.endYear;
+  if(o.subIdx!=null) subIdx.value=o.subIdx;
+}
+function saveSettings(){
+  try{ localStorage.setItem('tbs-settings', JSON.stringify(readAllControls())); }catch(e){}
+}
+function restoreSettings(){
+  try{
+    const raw = localStorage.getItem('tbs-settings');
+    if(!raw) return;
+    const o = JSON.parse(raw);
+    applyControls(o);
+    enforceMin40('end');
+    syncLabels();
+  }catch(e){}
+}
+// apply restore after defaults
+restoreSettings();
+// save on changes
+['w0','infl','cap','hysa','startW','quarterlyMode','withdrawQuarter','p2','p3','p3ContribOn','p3ContribAmt','p3ContribYears','startYear','endYear','subIdx']
+ .forEach(id=>{ var el=document.getElementById(id); if(el){ el.addEventListener('change', saveSettings); el.addEventListener('input', saveSettings);} });
 function enforceMin40(which){
   if(which==='start'){ if((+endYear.value)<(+startYear.value)+39) endYear.value=(+startYear.value)+39; }
   else{ if((+endYear.value)<(+startYear.value)+39) startYear.value=(+endYear.value)-39; }
@@ -335,8 +389,52 @@ function updateFromSlider(){
     </tr></tbody></table>`;
 }
 
-document.getElementById('simulateBtn').addEventListener('click', simulate);
+
+// ---- Reset to defaults ----
+function clearSavedSettings(){
+  try{ localStorage.removeItem('tbs-settings'); }catch(e){}
+}
+function resetToDefaults(){
+  clearSavedSettings();
+  // Defaults
+  w0.value = 250000;
+  infl.value = 7.0;
+  cap.value = 400000;
+  hysa.value = 3.0;
+  startW.value = 3;
+  quarterlyMode.checked = false;
+  withdrawQuarter.value = 'Q4';
+  p2.value = 4500000;
+  p3.value = 1000000;
+  p3ContribOn.checked = false;
+  p3ContribAmt.value = 180000;
+  p3ContribYears.value = 10;
+  // Scope defaults
+  (function(){
+    const PREFERRED_END=2025;
+    const ys=yearsAvailable(), minY=ys[0], maxY=ys[ys.length-1];
+    const desiredEnd=Math.min(maxY, PREFERRED_END);
+    endYear.value = desiredEnd;
+    startYear.value = Math.max(minY, 1935);
+    enforceMin40('end');
+  })();
+  subIdx.value = 0;
+  syncLabels();
+}
+function bindButtons(){
+  var _rb=document.getElementById('resetBtn')||document.getElementById('resetFloat');
+  if(_rb){ _rb.addEventListener('click', resetToDefaults); }
+  var _sb=document.getElementById('simulateBtn')||document.getElementById('simulateFloat');
+  if(_sb){ _sb.addEventListener('click', simulate); }
+}
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', bindButtons); } else { bindButtons(); }
+
+
 document.getElementById('subIdx').addEventListener('input', updateFromSlider);
 </script>
+<div id='btnBar'>
+  <button id='resetFloat'>Reset</button>
+  <button id='simulateFloat'>Simulate</button>
+</div>
 </body>
 </html>
