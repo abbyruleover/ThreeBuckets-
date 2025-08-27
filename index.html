@@ -56,6 +56,7 @@
   <div class="tabs">
     <a href="#" id="tabDash" class="tab active">Dashboard</a>
     <a href="#" id="tabAbout" class="tab">About</a>
+    <a href="#" id="tabChange" class="tab">Changelog</a>
   </div>
 </header>
 
@@ -518,5 +519,62 @@ function bindAllUI(){
 }
 if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', bindAllUI); } else { bindAllUI(); }
 </script>
+
+<div id="pageChange" class="container" style="display:none">
+  <div class="card">
+    <h3>Changelog</h3>
+    <p class="muted">Key updates to the dashboard over time. This tab will grow as we iterate.</p>
+  </div>
+
+  <div class="card">
+    <h3>Version history</h3>
+    <ul>
+      <li><strong>v21</strong> — New <em>Changelog</em> tab; consolidated change list.</li>
+      <li><strong>v20</strong> — Removed empty ℹ︎ icons next to “Use quarterly decisions” and “Enable P3 contributions”.</li>
+      <li><strong>v19</strong> — Removed KPI badges above the metrics; kept the metrics table only; cleaned stray ℹ︎.</li>
+      <li><strong>v18</strong> — Clickable ℹ︎ popovers (mobile-friendly); fixed walkthrough “Dismiss”; bound Simulate/Reset after DOM ready.</li>
+      <li><strong>v17</strong> — UI polish: lighter theme, typography refresh, card emojis (💵/📈/🔒), hover states, median overlay, mobile sliders, quick guide.</li>
+      <li><strong>v16</strong> — Stacked title “The / Three / Bucket / Strategy 🪣”.</li>
+      <li><strong>v15</strong> — Single “Source” line above the metrics (removed header duplicate).</li>
+      <li><strong>v14</strong> — Moved data source display to appear once in the dashboard body.</li>
+      <li><strong>v12–v13</strong> — Fixed Simulate button by deferring event binding; footer/source experiments.</li>
+      <li><strong>v8–v11</strong> — LocalStorage auto‑save; “Reset to defaults”; floating buttons.</li>
+      <li><strong>Earlier</strong> — Embedded French monthly data; scope sliders (40‑yr min); quarterly/annual decision rules; HYSA & cap logic; worst‑5 and single‑window plots; About page; many bugfixes.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Planned</h3>
+    <ul>
+      <li>“Find minimum P2 (zero replenishments)” one‑click solver.</li>
+      <li>Dynamic withdrawal guardrails; bulk P1 refill option.</li>
+      <li>Stress overlays (healthcare shock, black swan injections).</li>
+    </ul>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  var tabDash = document.getElementById('tabDash');
+  var tabAbout = document.getElementById('tabAbout');
+  var tabChange = document.getElementById('tabChange');
+  var pageDash = document.getElementById('pageDash');
+  var pageAbout = document.getElementById('pageAbout');
+  var pageChange = document.getElementById('pageChange');
+  function show(which){
+    if(pageDash) pageDash.style.display = (which==='dash') ? '' : 'none';
+    if(pageAbout) pageAbout.style.display = (which==='about') ? '' : 'none';
+    if(pageChange) pageChange.style.display = (which==='change') ? '' : 'none';
+    if(tabDash) tabDash.classList.toggle('active', which==='dash');
+    if(tabAbout) tabAbout.classList.toggle('active', which==='about');
+    if(tabChange) tabChange.classList.toggle('active', which==='change');
+  }
+  if(tabDash) tabDash.addEventListener('click', function(e){ e.preventDefault(); show('dash'); });
+  if(tabAbout) tabAbout.addEventListener('click', function(e){ e.preventDefault(); show('about'); });
+  if(tabChange) tabChange.addEventListener('click', function(e){ e.preventDefault(); show('change'); });
+})();
+</script>
+
 </body>
 </html>
