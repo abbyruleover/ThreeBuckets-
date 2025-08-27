@@ -6,13 +6,13 @@
 <title>The Three Bucket Strategy — French (1926+) Embedded</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
-  :root{ --bg:#f5f7fb; --panel:#ffffff; --ink:#0b1220; --muted:#5f6b7a; --line:#e3e8f0; --accent:#2b6ef3; --accent-weak:#e7efff; }
+  :root{ --bg:#fafbfe; --panel:#ffffff; --ink:#0b1220; --muted:#5f6b7a; --line:#e3e8f0; --accent:#2b6ef3; --accent-weak:#e7efff; --accent-hover:#1f5add; }
   *{ box-sizing:border-box; }
-  body{ margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
   header{ position:static; background:#fff; border-bottom:1px solid var(--line);
     padding:12px 16px; display:flex; align-items:center; gap:12px; justify-content:space-between; }
   .brand{ display:flex; align-items:center; gap:12px; }
-  h1{ margin:0; font-size:18px; letter-spacing:.2px; }
+  h1{ margin:0; font-size:18px; letter-spacing:.2px; line-height:1.15; }
   .source{ color:var(--muted); font-size:12px; }
   .tabs{ display:flex; gap:10px; }
   .tab{ text-decoration:none; color:var(--ink); background:#fff; border:1px solid var(--line);
@@ -24,7 +24,7 @@
   .col{ flex:1 1 340px; min-width:300px; }
   .card h3{ margin:0 0 10px; font-size:15px; }
   label{ display:block; font-size:13px; margin:8px 0 4px; }
-  input[type=range]{ width:100%; }
+  input[type=range]{ width:100%; height:28px; }
   select, input[type=checkbox]{ margin-top:4px; }
   .muted{ color:var(--muted); font-size:12px; }
   .toolbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -41,13 +41,17 @@
   #metrics th, #metrics td{ border-bottom:1px solid var(--line); padding:8px; text-align:left; font-size:12px; }
   footer{ padding:14px; text-align:center; color:var(--muted); border-top:1px solid var(--line); }
   @media (max-width:520px){ header{ padding:10px 12px; } .container{ padding:12px; } }
-</style>
+.tip{ position:absolute; z-index:60; background:#111; color:#fff; padding:8px 10px; border-radius:8px; font-size:12px; 
+  box-shadow:0 8px 24px rgba(16,24,40,.2); max-width:240px; }
+.info{ display:inline-block; width:18px; height:18px; line-height:18px; text-align:center; border-radius:50%; background:#eef3ff; color:#274; font-weight:700; cursor:pointer; }
+.info:hover{ filter:brightness(.97); }
+    </style>
 </head>
 <body>
 <header>
   <div class="brand">
-    <h1>The Three Bucket Strategy</h1>
-    <div class="source">Source: French Market (Mkt−RF + RF), monthly 1926+ (embedded)</div>
+    <h1>The<br>Three<br>Bucket<br>Strategy 🪣</h1>
+    
   </div>
   <div class="tabs">
     <a href="#" id="tabDash" class="tab active">Dashboard</a>
@@ -56,23 +60,35 @@
 </header>
 
 <div id="pageDash" class="container">
+<div id="walkthrough" class="card" style="margin-bottom:12px;">
+  <strong>Quick guide:</strong>
+  <ol style="margin:8px 0 0 18px;">
+    <li>Set your <em>P1</em> withdrawal target, inflation, cap, and HYSA rate.</li>
+    <li>Choose <em>P2</em> scope (start/end years). Defaults to 1935–2025. Keep ≥ 40 yrs.</li>
+    <li>Adjust <em>P3</em> starting balance and (optional) contributions.</li>
+    <li>Press <strong>Simulate</strong>. Browse subwindows with the slider; see worst‑5 and metrics.</li>
+  </ol>
+  <div class="muted">Tooltips (ℹ︎) explain each setting. You can reset anytime.</div>
+  <div style="text-align:right;margin-top:6px;"><button id="closeWalk" class="ghost" style="padding:6px 10px;">Dismiss</button></div>
+</div>
+
   <div class="grid">
     <div class="card col">
-      <h3>P1 — Cash (HYSA) & Withdrawals</h3>
-      <label>Starting withdrawal (also P1 target): $<span id="w0v">250,000</span></label>
+      <h3>💵 P1 — Cash (HYSA) & Withdrawals</h3>
+      <label>Starting withdrawal (also P1 target): <span class='info' data-tip='Sets P1 target and initial cash; used on negative decision years'>ℹ︎</span> $<span id="w0v">250,000</span></label>
       <input id="w0" type="range" min="50000" max="500000" step="5000" value="250000">
       <div class="muted">P1 target equals this amount; used in negative decision years.</div>
 
-      <label>Inflation for withdrawals: <span id="inflv">7.0</span>%</label>
+      <label>Inflation for withdrawals: <span class='info' data-tip='Annual increase of the lifestyle withdrawal target'>ℹ︎</span> <span id="inflv">7.0</span>%</label>
       <input id="infl" type="range" min="0" max="10" step="0.1" value="7.0">
 
-      <label>Withdrawal cap: $<span id="capv">400,000</span></label>
+      <label>Withdrawal cap: <span class='info' data-tip='Withdrawal target cannot exceed this dollar cap'>ℹ︎</span> $<span id="capv">400,000</span></label>
       <input id="cap" type="range" min="100000" max="600000" step="10000" value="400000">
 
-      <label>HYSA rate: <span id="hysav">3.0</span>%</label>
+      <label>HYSA rate: <span class='info' data-tip='Interest rate earned on P1 cash each year'>ℹ︎</span> <span id="hysav">3.0</span>%</label>
       <input id="hysa" type="range" min="0" max="8" step="0.1" value="3.0">
 
-      <label>Begin withdrawals in year: <span id="startWy">3</span></label>
+      <label>Begin withdrawals in year: <span class='info' data-tip='Year index to start the withdrawal rules (Year 3 recommended)'>ℹ︎</span> <span id="startWy">3</span></label>
       <input id="startW" type="range" min="1" max="10" step="1" value="3">
 
       <div style="margin-top:6px">
@@ -88,18 +104,18 @@
     </div>
 
     <div class="card col">
-      <h3>P2 — Growth</h3>
-      <label>Starting P2: $<span id="p2v">4,500,000</span></label>
+      <h3>📈 P2 — Growth</h3>
+      <label>Starting P2: <span class='info' data-tip='Initial balance of the growth bucket'>ℹ︎</span> $<span id="p2v">4,500,000</span></label>
       <input id="p2" type="range" min="1000000" max="9000000" step="50000" value="4500000">
       <div class="muted">Compounds monthly from the embedded dataset.</div>
 
       <div class="grid" style="gap:10px; margin-top:8px">
         <div class="col" style="min-width:200px">
-          <label>Start year (scope): <span id="startYearV">—</span></label>
+          <label>Start year (scope): <span class='info' data-tip='Earliest year used to build 40‑yr windows'>ℹ︎</span> <span id="startYearV">—</span></label>
           <input id="startYear" type="range">
         </div>
         <div class="col" style="min-width:200px">
-          <label>End year (scope): <span id="endYearV">—</span></label>
+          <label>End year (scope): <span class='info' data-tip='Latest year used to build 40‑yr windows'>ℹ︎</span> <span id="endYearV">—</span></label>
           <input id="endYear" type="range">
         </div>
       </div>
@@ -107,14 +123,14 @@
     </div>
 
     <div class="card col">
-      <h3>P3 — Reserve</h3>
-      <label>Starting P3: $<span id="p3v">1,000,000</span></label>
+      <h3>🔒 P3 — Reserve</h3>
+      <label>Starting P3: <span class='info' data-tip='Initial balance of the reserve bucket'>ℹ︎</span> $<span id="p3v">1,000,000</span></label>
       <input id="p3" type="range" min="0" max="6000000" step="50000" value="1000000">
 
       <label><input id="p3ContribOn" type="checkbox"> Enable P3 contributions</label>
-      <label>Contribute per year: $<span id="p3ContribAmtV">180,000</span></label>
+      <label>Contribute per year: <span class='info' data-tip='Amount added to P3 each year during contribution phase'>ℹ︎</span> $<span id="p3ContribAmtV">180,000</span></label>
       <input id="p3ContribAmt" type="range" min="0" max="600000" step="10000" value="180000">
-      <label>Contribute for first N years: <span id="p3ContribYearsV">10</span></label>
+      <label>Contribute for first N years: <span class='info' data-tip='Length of contribution phase (years)'>ℹ︎</span> <span id="p3ContribYearsV">10</span></label>
       <input id="p3ContribYears" type="range" min="0" max="40" step="1" value="10">
       <div class="muted">P3 grows at (P2 annual % + 2%) and replenishes P2 toward its initial level if P2 hits $0.</div>
     </div>
@@ -132,7 +148,8 @@
     <div id="plotWorst" style="height:360px"></div>
   </div>
 
-  <div class="card">
+  <div class="muted">Source: French Market (Mkt−RF + RF), monthly 1926+ (embedded)</div>
+<div class="card">
     <h3>Metrics — selected subwindow</h3>
     <div id="metrics"></div>
   </div>
@@ -166,7 +183,8 @@
   </div>
 </div>
 
-<footer>Created by Sankrit and Abhay</footer>
+<footer>Created by Sankrit and Abhay
+</footer>
 
 <script id="frenchMonthlyJSON" type="application/json">{"1926":[1.0,1.0,1.0,1.0,1.0,1.0,1.0311,1.0289,1.0061,0.9705,1.0285,1.029],"1927":[1.002,1.0443,1.0044,1.0072,1.0575,0.9788,1.0756000000000001,1.0227,1.0498,0.9596,1.0673,1.0231],"1928":[0.9968,0.9864,1.0908,1.0447,1.0184,0.9541,1.0095,1.0701,1.0314,1.0172,1.122,1.0046],"1929":[1.05,1.0002,0.9949,1.0183,0.9406,1.1022,1.0481,1.0854,0.949,0.8039000000000001,0.875,1.0165],"1930":[1.0575,1.028,1.0744,0.9816,0.986,0.8419,1.0432,1.0039,0.8741,0.9131,0.9709,0.9228],"1931":[1.064,1.1092,0.9378,0.9008,0.868,1.1401,0.9343,1.0043,0.7129000000000001,1.0809,0.9102,0.866],"1932":[0.9866,1.0568,0.8886000000000001,0.8217,0.7955,0.9925,1.3364,1.3715,0.9709,0.8687,0.9414,1.0443],"1933":[1.0125,0.8468,1.031,1.3891,1.2147000000000001,1.1312,0.9037999999999999,1.1207,0.8936999999999999,0.9165,1.0999,1.0184],"1934":[1.1265,0.9751,1.0011,0.9822,0.9275,1.0272,0.8907,1.0559,0.9977,0.9835,1.0834,1.0037],"1935":[0.9655,0.9806,0.963,1.0907,1.0347,1.0594,1.0755,1.0266,1.0263,1.0704,1.0489,1.0456],"1936":[1.069,1.025,1.0098,0.9188,1.0521,1.0243,1.0669,1.0101,1.0098,1.0712,1.0327,1.002],"1937":[1.0336,1.011,0.9975,0.9267,0.9923,0.958,1.0894,0.9514,0.8642,0.9043,0.9169,0.9571],"1938":[1.0048,1.0585,0.7607999999999999,1.1449,0.9614,1.2389000000000001,1.0732,0.9732,1.0085,1.0781,0.982,1.0417],"1939":[0.9402,1.0352,0.8796,0.9982,1.0682,0.9468,1.1022,0.9331,1.169,0.9947,0.9635,1.0293],"1940":[0.9759,1.0144,1.0205,1.0022,0.7798,1.0669,1.0318,1.022,1.0239,1.0303,0.9835,1.0069],"1941":[0.9581,0.9856,1.0085,0.9453,1.0137,1.0583,1.059,0.9984,0.9913,0.9474,0.9805,0.9513],"1942":[1.0081,0.9755,0.9341,0.9564,1.0599,1.027,1.0354,1.0183,1.0265,1.0685,1.0016,1.0517],"1943":[1.0716,1.0619,1.0606,1.0084,1.0578,1.0185,0.9525,1.0133,1.0243,0.9888,0.9410000000000001,1.064],"1944":[1.0177,1.004,1.0248,0.9834,1.0511,1.0554,0.9854,1.016,1.0004,1.0019,1.0174,1.0406],"1945":[1.0204,1.0625,0.9611,1.0783,1.0177,1.0041,0.9786,1.0625,1.048,1.0392,1.0542,1.0122],"1946":[1.0627,0.9419,1.0591,1.0426,1.0397,0.9614,0.9734,0.9357,0.8985,0.9859,1.0001,1.05],"1947":[1.0128,0.9894,0.9835,0.9523,0.9906,1.0533,1.0416,0.9829,0.9952,1.0253,0.9807,1.0309],"1948":[0.9614,0.9569,1.082,1.0373,1.074,0.9998,0.95,1.0033,0.9705,1.06,0.907,1.033],"1949":[1.0033,0.9716,1.0415,0.9822,0.9712,1.002,1.0563,1.0268,1.0318,1.0323,1.0189,1.0523],"1950":[1.0179,1.0157,1.0136,1.0403,1.0442,0.9414,1.0147,1.0496,1.0492,0.9993,1.0285,1.0568],"1951":[1.0583,1.015,0.9795,1.0499,0.9776,0.9749,1.0708,1.0442,1.0082,0.9763000000000001,1.0069,1.0345],"1952":[1.016,0.9748,1.0455,0.9515,1.0333,1.0399,1.0106,0.9938,0.9812,0.9948,1.0606,1.0309],"1953":[0.9982,0.9987,0.9874,0.9733,1.0068,0.9829,1.0255,0.9561,1.0037,1.0473,1.0292,1.0015],"1954":[1.0524,1.0174,1.0374,1.0436,1.0315,1.0114,1.0505,0.977,1.0649,0.984,1.0947,1.0557],"1955":[1.0068,1.0311,0.9995,1.0321,1.0108,1.0665,1.0199,1.0038,0.9979,0.9751,1.0721,1.0167],"1956":[0.9719,1.0397,1.0679,1.0047,0.9501000000000001,1.0367,1.0506,0.9698,0.9504,1.0077,1.0055,1.034],"1957":[0.967,0.9817,1.0236,1.0451,1.0372,0.9949,1.0096,0.9513,0.9427,0.9597,1.0259,0.9634],"1958":[1.0493,0.9859,1.0336,1.0317,1.0243,1.0296,1.0446,1.0194,1.0485,1.0271,1.0312,1.0538],"1959":[1.0092,1.0114,1.005,1.0386,1.0195,1.0001,1.0343,0.9881,0.955,1.0158,1.0186,1.028],"1960":[0.9335,1.0145,0.9872,0.9848,1.0339,1.0232,0.9776,1.0317,0.9416,0.9951,1.0482,1.0489],"1961":[1.0639,1.0371,1.0309,1.0046,1.0258,0.9712,1.0301,1.0271,0.9802,1.0277,1.046,1.0002],"1962":[0.9637,1.0201,0.9952,0.9363,0.9158,0.917,1.0654,1.0236,0.9499,1.0021,1.1109,1.0124],"1963":[1.0519,0.9783,1.0331,1.0476,1.02,0.9823,0.9988,1.0533,0.987,1.0283,0.9941,1.0212],"1964":[1.0254,1.0181,1.0172,1.0039,1.0167,1.0157,1.0204,0.9884,1.0297,1.0089,1.0028,1.0035],"1965":[1.0382,1.0074,0.9902,1.0342,0.9953,0.9484,1.0175,1.0306,1.0317,1.0291,1.0032,1.0134],"1966":[1.011,0.9914,0.9787,1.0247,0.9474,0.9894,0.9872,0.9247,0.9934,1.0431,1.0178,1.0053],"1967":[1.0858,1.0113,1.0438,1.0421,0.9601,1.0269,1.049,0.9941,1.0343,0.9731,1.0073,1.0338],"1968":[0.9637,0.9665,1.0059,1.0945,1.0273,1.0113,0.9779,1.0177,1.0448,1.0087,1.0585,0.965],"1969":[0.9928,0.946,1.0313,1.0199,1.0039,0.9332,0.9353,1.0519,0.9765,1.0566,0.9672000000000001,0.9801],"1970":[0.925,1.0576,0.9951,0.8951,0.9363,0.9478,1.0744,1.0503,1.0472,0.9819,1.0508,1.0616],"1971":[1.0521,1.0174,1.0442,1.0343,0.963,1.0028,0.9591,1.0426,0.9951,0.9595,0.9991,1.0908],"1972":[1.0276,1.0312,1.0089,1.0058,1.0159,0.9786,0.9951,1.0356,0.992,1.0092,1.0497,1.0099],"1973":[0.9717,0.9557,0.9916,0.9484,0.9754,0.9894,1.0568,0.9688,1.0542,0.9982,0.8778,1.0123],"1974":[1.0047,1.0012,0.9774,0.9547,0.9605,0.9776,0.9264,0.9121,0.8902,1.1662,0.9601,0.9726],"1975":[1.1425,1.0599,1.0307,1.0466,1.0564,1.0528,0.9388,0.9764,0.9627,1.0588,1.0306,0.9888],"1976":[1.1262,1.0065,1.0272,0.9893,0.9903,1.0449,0.9941,0.9985,1.025,0.9799,1.0076,1.0605],"1977":[0.9633,0.9841,0.9903,1.0053,0.989,1.0512,0.9873,0.9868,1.0016,0.961,1.045,1.0076],"1978":[0.9449,0.9907,1.0338,1.0841,1.0227,0.9885,1.0568,1.0434,0.9918,0.8878,1.0341,1.0165],"1979":[1.0499,0.9717,1.0648,1.0073,0.9862,1.0465,1.016,1.0631,1.0,0.9277,1.0621,1.0273],"1980":[1.063,0.9966,0.8831,1.0521,1.0607,1.0359,1.0704,1.0239,1.0294,1.0199,1.1056,0.9685],"1981":[0.9598,1.0168,1.0488,0.9892,1.0128,0.9901,0.9969,0.9426,0.9405,1.0613,1.0447,0.9724],"1982":[0.9757,0.9506,0.9916,1.0437,0.9713,0.9788,0.9785,1.1199,1.0182,1.1189,1.0531,1.0123],"1983":[1.0428,1.0321,1.0344,1.0737,1.012,1.0374,0.9668,1.0026,1.0168,0.9733,1.0287,0.9896],"1984":[0.9884,0.9594,1.0138,1.003,0.948,1.0256,0.981,1.111,1.0006,1.0016,0.9896,1.0249],"1985":[1.0862,1.018,0.9979,0.9976,1.0573,1.0182,0.999,0.9954,0.9609,1.0465,1.0707,1.0453],"1986":[1.0121,1.0767,1.0551,0.9924,1.0511,1.0158,0.9409,1.0653,0.9186,1.051,1.0156,0.9723],"1987":[1.1287,1.0481,1.021,0.9835,1.0049,1.0439,1.043,1.0399,0.9787,0.7741,0.9259,1.0721],"1988":[1.045,1.0523,0.9818,1.0103,1.0024,1.0527,0.9926,0.9728,1.0393,1.0177,0.983,1.0211],"1989":[1.0662,0.9838,1.0224,1.0502,1.0407,0.9938,1.0788,1.0217,0.9989,0.9703,1.0173,1.0179],"1990":[0.9277,1.0169,1.0247,0.9733,1.0911,0.9954,0.9878,0.9054,0.9449,0.9876,1.0692,1.0306],"1991":[1.0521,1.0767,1.031,1.0025,1.0413,0.9548,1.0473,1.0278,0.9887,1.0171,0.9619,1.1123],"1992":[0.9975,1.0136,0.9769,1.0141,1.0058,0.9799,1.0409,0.9788,1.0145,1.0125,1.0437,1.0181],"1993":[1.0116,1.0034,1.0257,0.9719,1.0311,1.0055,0.999,1.0397,1.0014,1.0164,0.9838,1.0188],"1994":[1.0312,0.9766,0.9548,1.0095,1.009,0.9727,1.031,1.0439,0.9809,1.0173,0.9634,1.013],"1995":[1.0222,1.0403,1.0265,1.0256,1.0344,1.0319,1.0416,1.0102,1.0379,0.9896,1.0438,1.0153],"1996":[1.0269,1.0172,1.0113,1.0252,1.0278,0.9927,0.9449,1.0318,1.0545,1.0129,1.0666,0.9876],"1997":[1.0541,0.9991,0.9541,1.0447,1.0722,1.0447,1.0774,0.9631,1.0578,0.9662,1.0338,1.0181],"1998":[1.0058,1.0742,1.0515,1.0117,0.9733,1.036,0.9798,0.8438,1.0665,1.073,1.0638,1.0653],"1999":[1.0383,0.9627,1.0391,1.0471,0.9788,1.0517,0.9689,0.9902,0.9762,1.0648,1.0377,1.081],"2000":[0.9567,1.0289,1.0568,0.9407,0.9611,1.0508,0.98,1.0753,0.9507,0.9778,0.8981,1.0168],"2001":[1.0379,0.9035,0.9317,1.0832,1.01,0.9834,0.9817,0.9391,0.9104,1.027,1.077,1.0176],"2002":[0.987,0.9783,1.0437,0.9494,0.9878,0.929,0.9196,1.0064,0.898,1.0798,1.0608,0.9435],"2003":[0.9753000000000001,0.9821,1.0119,1.0828,1.0614,1.0152,1.024,1.024,0.9884,1.0615,1.0142,1.0437],"2004":[1.0222,1.0146,0.9877,0.9827,1.0124,1.0193,0.9606,1.0018,1.0171,1.0153,1.0468,1.0358],"2005":[0.9741,1.0204,0.9827,0.976,1.0389,1.0081,1.0416,0.991,1.0077,0.9823,1.0392,1.0008],"2006":[1.0338,1.0004,1.0184,1.0109,0.9687,1.0005,0.9963,1.0245,1.0225,1.0363,1.0212,1.0125],"2007":[1.0182,0.9842,1.0114,1.0393,1.0364,0.9844,0.9668,1.0136,1.0354,1.0211,0.9554,0.994],"2008":[0.9388,0.9704,0.9923,1.0479,1.0205,0.9174,0.994,1.0166,0.908,0.8288,0.9229,1.0177],"2009":[0.9191,0.8987,1.0903,1.1018,1.0521,1.0043,1.0775,1.0334,1.0409,0.9747,1.0563,1.0281],"2010":[0.9665,1.0339,1.0631,1.02,0.9211,0.9445,1.0693,0.9523,1.0956,1.0388,1.006,1.0683],"2011":[1.02,1.0349,1.0046,1.029,0.9873,0.9826,0.9765,0.9405,0.9242,1.1133,0.9973,1.0075],"2012":[1.0505,1.0442,1.0312,0.9915,0.9384,1.0389,1.0079,1.0255,1.0274,0.9825,1.0079,1.0119],"2013":[1.0557,1.0128,1.0404,1.0156,1.028,0.988,1.0565,0.9729,1.0377,1.0417,1.0311,1.0281],"2014":[0.9668,1.0466,1.0043,0.9982,1.0205,1.026,0.9797,1.0424,0.9804,1.0251,1.0256,0.9995],"2015":[0.969,1.0613,0.9889,1.0059,1.0137,0.9848,1.0157,0.9398,0.9694,1.0775,1.0057,0.9786],"2016":[0.9427,0.9996,1.0697,1.0093,1.0179,0.9999,1.0396,1.0051,1.0029,0.9801,1.0487,1.0184],"2017":[1.0198,1.0359,1.002,1.0113,1.0113,1.0085,1.0195,1.0027,1.0258,1.0235,1.032,1.0115],"2018":[1.0569,0.9647,0.9777,1.0041,1.028,1.0063,1.0336,1.0361,1.0021,0.9254,1.0189,0.9064],"2019":[1.0858,1.036,1.0129,1.0418,0.9329000000000001,1.071,1.0142,0.9761,1.0159,1.0222,1.0399,1.0291],"2020":[1.0002,0.9197,0.8674999999999999,1.1360000000000001,1.0558,1.0246,1.0584,1.0763,0.9637,0.9793,1.1246,1.0464],"2021":[0.9993,1.0281,1.0316,1.0495,1.003,1.0274,1.0134,1.0294,0.956,1.0663,0.9842,1.0324],"2022":[0.9384,0.9772,1.0308,0.9059,0.9969,0.9166,1.0965,0.9642,0.9085,1.0808,1.0494,0.9395],"2023":[1.0695999999999999,0.9777,1.0284,1.0097,1.007,1.0686,1.0366,0.9809,0.952,0.9732,1.0932,1.0528],"2024":[1.012,1.0549,1.0327,0.9581999999999999,1.0476,1.0321,1.0167,1.0208,1.0212,0.9939,1.0689,0.972],"2025":[1.0317,0.9789,0.9395,0.9951,1.0644,1.052,1.0,1.0,1.0,1.0,1.0,1.0]}</script>
 <script id="frenchAnnualPCT" type="application/json">{"1926":9.630227,"1927":32.583723,"1928":39.078597,"1929":-14.8523,"1930":-28.726014,"1931":-43.769566,"1932":-8.651739,"1933":56.795652,"1934":3.263777,"1935":45.004657,"1936":32.153306,"1937":-34.728916,"1938":28.180152,"1939":2.505469,"1940":-7.206559,"1941":-10.550184,"1942":16.49378,"1943":28.332097,"1944":21.356716,"1945":38.7357,"1946":-6.396094,"1947":3.423326,"1948":1.855188,"1949":20.198664,"1950":30.066784,"1951":20.694463,"1952":13.474906,"1953":0.718615,"1954":50.305632,"1955":25.355601,"1956":8.337524,"1957":-10.004076,"1958":44.981,"1959":12.771932,"1960":1.200968,"1961":26.938754,"1962":-10.187043,"1963":20.958714,"1964":16.07336,"1965":14.435287,"1966":-8.806073,"1967":28.708159,"1968":14.135085,"1969":-10.945551,"1970":0.089938,"1971":16.162777,"1972":16.916061,"1973":-19.312022,"1974":-27.804949,"1975":38.328838,"1976":26.980323,"1977":-3.117502,"1978":8.24594,"1979":23.466554,"1980":33.252237,"1981":-3.259492,"1982":21.455436,"1983":22.550772,"1984":3.860661,"1985":32.623861,"1986":16.417506,"1987":1.644766,"1988":17.99273,"1989":28.85742,"1990":-6.023993,"1991":34.816431,"1992":9.779175,"1993":11.160181,"1994":-0.148207,"1995":36.865119,"1996":21.206786,"1997":31.247058,"1998":24.260683,"1999":25.242405,"2000":-11.592112,"2001":-11.2014,"2002":-21.138775,"2003":31.692914,"2004":11.931462,"2005":6.100784,"2006":15.39844,"2007":5.73789,"2008":-36.656078,"2009":28.627883,"2010":17.411856,"2011":0.510885,"2012":16.347588,"2013":35.152985,"2014":11.742048,"2015":0.2124,"2016":13.58394,"2017":22.318135,"2018":-5.032384,"2019":30.478511,"2020":24.066193,"2021":23.850921,"2022":-19.916794,"2023":26.691232,"2024":25.005678,"2025":5.724557}</script>
@@ -342,18 +360,36 @@ function simulate(){
   subIdxV.textContent = subIdx.value;
 
   var results = subs.map(function(wi){ var r=runSubwindow(wi[0],p); return {start:wi[0],end:wi[1],...r}; });
+  // Build median across scope windows
+  var maxLen = Math.max.apply(null, results.map(r=>r.series.length));
+  var median = [];
+  for(var i=0;i<maxLen;i++){
+    var col = results.map(r=> (i<r.series.length? r.series[i]: null)).filter(v=>v!=null).sort((a,b)=>a-b);
+    if(col.length){ median.push(col[Math.floor(col.length/2)]); }
+  }
+
   var layout = {paper_bgcolor:'#fff',plot_bgcolor:'#fff',margin:{l:50,r:10,t:10,b:48},xaxis:{title:'Years',automargin:true},yaxis:{title:'P2 ($)',automargin:true}};
 
   var idx = Math.min(+subIdx.value, results.length-1);
   var sel = results[idx]; var label = sel.start + '–' + sel.end;
   selWinLbl.textContent = label;
-  Plotly.newPlot('plotOne',[{x:Array.from({length:sel.series.length},(_,i)=>i+1),y:sel.series.slice(),mode:'lines',name:label}], layout, {displayModeBar:false});
+  Plotly.newPlot('plotOne',[
+  {x:Array.from({length:sel.series.length},(_,i)=>i+1), y:sel.series.slice(), mode:'lines', name:label},
+  {x:Array.from({length:median.length},(_,i)=>i+1), y:median, mode:'lines', name:'Median (scope)', line:{dash:'dot'}}
+], layout, {displayModeBar:false});
 
   var worst5 = results.slice().sort(function(a,b){ return a.minP2 - b.minP2; }).slice(0,5);
   var tracesW = worst5.map(function(r){ return {x:Array.from({length:r.series.length},(_,i)=>i+1),y:r.series.slice(),name:(r.start+'–'+r.end),mode:'lines'}; });
   Plotly.newPlot('plotWorst', tracesW, layout, {displayModeBar:false});
 
-  metrics.innerHTML = `<table>
+  var kpi = `<div style='display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;'>`
++ `<span class='kpi'>P2 replenishments: ${sel.replP2}</span>`
++ `<span class='kpi'>P1 top‑ups: ${sel.replP1}</span>`
++ `<span class='kpi'>Min P2: $${Math.round(sel.minP2).toLocaleString()}</span>`
++ `<span class='kpi'>End P2: $${Math.round(sel.P2_end).toLocaleString()}</span>`
++ `<span class='kpi'>End P3: $${Math.round(sel.P3_end).toLocaleString()}</span>`
++ `</div>`;
+metrics.innerHTML = `<table>
     <thead><tr><th>Window</th><th>P2 repl.</th><th>P1 top‑ups</th><th>Min P2</th><th>End P2</th><th>End P3</th></tr></thead>
     <tbody><tr>
       <td>${label}</td>
@@ -375,9 +411,21 @@ function updateFromSlider(){
   var label = sel.start + '–' + sel.end;
   selWinLbl.textContent = label;
 
-  Plotly.react('plotOne',[{x:Array.from({length:sel.series.length},(_,i)=>i+1),y:sel.series.slice(),mode:'lines',name:label}], _sim.layout, {displayModeBar:false});
+  var maxLen = Math.max.apply(null, _sim.results.map(r=>r.series.length));
+var median=[]; for(var i=0;i<maxLen;i++){ var col=_sim.results.map(r=> (i<r.series.length? r.series[i]: null)).filter(v=>v!=null).sort((a,b)=>a-b); if(col.length) median.push(col[Math.floor(col.length/2)]); }
+Plotly.react('plotOne',[
+  {x:Array.from({length:sel.series.length},(_,i)=>i+1), y:sel.series.slice(), mode:'lines', name:label},
+  {x:Array.from({length:median.length},(_,i)=>i+1), y:median, mode:'lines', name:'Median (scope)', line:{dash:'dot'}}
+], _sim.layout, {displayModeBar:false});
 
-  metrics.innerHTML = `<table>
+  var kpi = `<div style='display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;'>`
++ `<span class='kpi'>P2 replenishments: ${sel.replP2}</span>`
++ `<span class='kpi'>P1 top‑ups: ${sel.replP1}</span>`
++ `<span class='kpi'>Min P2: $${Math.round(sel.minP2).toLocaleString()}</span>`
++ `<span class='kpi'>End P2: $${Math.round(sel.P2_end).toLocaleString()}</span>`
++ `<span class='kpi'>End P3: $${Math.round(sel.P3_end).toLocaleString()}</span>`
++ `</div>`;
+metrics.innerHTML = `<table>
     <thead><tr><th>Window</th><th>P2 repl.</th><th>P1 top‑ups</th><th>Min P2</th><th>End P2</th><th>End P3</th></tr></thead>
     <tbody><tr>
       <td>${label}</td>
@@ -436,5 +484,39 @@ document.getElementById('subIdx').addEventListener('input', updateFromSlider);
   <button id='resetFloat'>Reset</button>
   <button id='simulateFloat'>Simulate</button>
 </div>
+<script>
+// --- DOM Ready bindings for buttons and tooltips ---
+function bindAllUI(){
+  // Simulate/Reset (supports floating IDs)
+  var sim = document.getElementById('simulateFloat') || document.getElementById('simulateBtn');
+  var rst = document.getElementById('resetFloat') || document.getElementById('resetBtn');
+  if(sim){ sim.onclick = simulate; }
+  if(rst){ rst.onclick = resetToDefaults; }
+
+  // Walkthrough dismiss
+  var cw=document.getElementById('closeWalk');
+  if(cw){ cw.onclick = function(){ var w=document.getElementById('walkthrough'); if(w) w.remove(); }; }
+
+  // Click-to-toggle tooltips
+  document.querySelectorAll('.info').forEach(function(el){
+    el.addEventListener('click', function(e){
+      e.stopPropagation();
+      // Remove existing tips
+      document.querySelectorAll('.tip').forEach(t=>t.remove());
+      // Make tip
+      var tip = document.createElement('div');
+      tip.className='tip';
+      tip.textContent = el.getAttribute('data-tip') || '';
+      document.body.appendChild(tip);
+      var r = el.getBoundingClientRect();
+      tip.style.left = (window.scrollX + r.left + r.width + 8) + 'px';
+      tip.style.top  = (window.scrollY + r.top - 2) + 'px';
+    });
+  });
+  // Clicking elsewhere closes any open tip
+  document.addEventListener('click', function(){ document.querySelectorAll('.tip').forEach(t=>t.remove()); });
+}
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', bindAllUI); } else { bindAllUI(); }
+</script>
 </body>
 </html>
